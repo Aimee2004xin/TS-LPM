@@ -27,25 +27,23 @@ hubert_features = [scipy.io.loadmat(path)["hubert"] for path in tqdm(df['path_hu
 HUBERT_DIM = 768 
 MFCC_DIM = 13   
 class AttentionFusion(nn.Module):
-    def __init__(self, hubert_dim, mfcc_dim, hubert_weight=0.6):
+    def __init__(self, hubert_dim, mfcc_dim):
         super(AttentionFusion, self).__init__()
         self.hubert_transform = nn.Linear(hubert_dim, 512)
         self.mfcc_transform = nn.Linear(mfcc_dim, 512)
         self.attention = nn.Linear(512 * 2, 1)  # 注意这里改为 512 * 2
-        self.hubert_weight = hubert_weight
 
     def forward(self, hubert, mfcc):
         hubert_transformed = self.hubert_transform(hubert)
         mfcc_transformed = self.mfcc_transform(mfcc)
         concat_features = torch.cat([hubert_transformed, mfcc_transformed], dim=1)
-        
-        #将 attention_weights 的初始值设置为 hubert_weight，之后仍然会进行微调
-        attention_weights = self.hubert_weight * torch.ones_like(hubert[:, 0:1]) + \
-                            (1.0 - self.hubert_weight) * torch.sigmoid(self.attention(concat_features)
-        )
+
+        # Use sigmoid on attention layer output for attention_weights
+        attention_weights = torch.sigmoid(self.attention(concat_features))
+
         fused_features = attention_weights * hubert_transformed + (1 - attention_weights) * mfcc_transformed
-        #fused_features = hubert_transformed 
         return fused_features
+
 class EarlyStopping:
     def __init__(self, patience=5, delta=0.0001):
         self.patience = patience
