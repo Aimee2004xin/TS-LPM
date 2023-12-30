@@ -31,7 +31,7 @@ class AttentionFusion(nn.Module):
         super(AttentionFusion, self).__init__()
         self.hubert_transform = nn.Linear(hubert_dim, 512)
         self.mfcc_transform = nn.Linear(mfcc_dim, 512)
-        self.attention = nn.Linear(512 * 2, 1)  # 注意这里改为 512 * 2
+        self.attention = nn.Linear(512 * 2, 1)
 
     def forward(self, hubert, mfcc):
         hubert_transformed = self.hubert_transform(hubert)
@@ -77,13 +77,12 @@ class EmotionClassifier(nn.Module):
 def normalize_data(data):
     mean = torch.mean(data, dim=0)
     std = torch.std(data, dim=0)
-    return (data - mean) / (std + 1e-7)  # adding a small value to avoid division by zero
+    return (data - mean) / (std + 1e-7)
 
 fusion_model = AttentionFusion(HUBERT_DIM, MFCC_DIM).float()
 label_encoder = LabelEncoder()
 encoded_emotions = label_encoder.fit_transform(df['emotion'])
 
-# 添加权重计算
 class_counts = np.bincount(encoded_emotions)
 max_count = np.max(class_counts)
 class_weights = max_count / class_counts
@@ -99,23 +98,16 @@ print("mfcc",mfcc.shape)
 
 num_emotions = len(np.unique(encoded_emotions))
 model = EmotionClassifier(512, num_emotions).float()
-#model = EmotionClassifier(n_estimators=100)
 criterion = nn.CrossEntropyLoss(weight=weights)
-# optimizer = Adam(model.parameters(), lr=0.001)
 from torch.optim import SGD
 optimizer = SGD(model.parameters(), lr=0.01, momentum=0.9)
-# 使用学习率调度
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)
-# Split dataset
 split = int(0.8 * len(hubert))  # 80% for training
 train_data = TensorDataset(fusion_model(hubert[:split], mfcc[:split]), torch.tensor(encoded_emotions[:split]))
 test_data = TensorDataset(fusion_model(hubert[split:], mfcc[split:]), torch.tensor(encoded_emotions[split:]))
 
 train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_data, batch_size=32)
-
-#fused_features = fusion_model(hubert_tensors, mfcc_tensors).detach().numpy()
-# Training Loop
 early_stopping = EarlyStopping(patience=30)
 for epoch in range(200):  # Train for 10 epochs
     for fused_features, labels in train_loader:
@@ -155,7 +147,6 @@ for fused_features, labels in test_loader:
 
 ua = np.mean([accuracy_score(np.array(true_labels) == emotion, np.array(predictions) == emotion) for emotion in np.unique(true_labels)])
 print("Unweighted Accuracy (UA):", ua)
-
 
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
