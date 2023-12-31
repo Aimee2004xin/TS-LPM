@@ -165,12 +165,10 @@ def handle_tess(model: Hubert):
     if not os.path.exists(save_L12):
         os.makedirs(save_L12)
 
-    # 获取所有的 wav 文件
     wav_files = [f for f in os.listdir(matroot) if f.endswith('.wav')]
-    # 获取所有已经处理过的 mat 文件
+
     processed_files = os.listdir(save_L12)
 
-    # 过滤出那些还没有处理过的 wav 文件
     files_to_process = [f for f in wav_files if f.replace('.wav', '.mat') not in processed_files]
 
     print(f'We have {len(files_to_process)} samples to process.')
