@@ -3,7 +3,7 @@ import soundfile as sf
 import scipy.signal as signal
 from scipy import io
 import numpy as np
-from WavLM import WavLM, WavLMConfig  # 确保这些类是正确导入的
+from WavLM import WavLM, WavLMConfig
 import os
 class WavLMFeatureExtractor:
     def __init__(self, ckpt_path):
@@ -16,7 +16,7 @@ class WavLMFeatureExtractor:
 
     def read_audio(self, path):
         wav, sr = sf.read(path)
-        if sr != 16000:  # 假设模型需要16kHz的采样率
+        if sr != 16000: 
             wav = signal.resample(wav, int(wav.shape[0] / sr * 16000))
         if wav.ndim == 2:
             wav = wav.mean(-1)
@@ -28,7 +28,6 @@ class WavLMFeatureExtractor:
         if self.cfg.normalize:
             wav = torch.nn.functional.layer_norm(wav, wav.shape)
         with torch.no_grad():
-            # 提取最后一层的特征或者每层的特征
             rep = self.model.extract_features(wav)[0]
         return rep
 
@@ -52,4 +51,4 @@ def handle_dataset(extractor, dataset_name):
 if __name__ == '__main__':
     ckpt_path = "/home/xrl/speech/WavLM-Large.pt"
     extractor = WavLMFeatureExtractor(ckpt_path)
-    handle_dataset(extractor, 'savee')  # 替换'dataset_name'为实际数据集名
+    handle_dataset(extractor, 'savee')
