@@ -51,9 +51,7 @@ def handle_dataset(model: MFCCExtractor):
     wav_files = [f for f in os.listdir(wavroot) if f.endswith('.wav')]
     mat_files = [f.replace('.wav', '.mat') for f in wav_files]
     
-    # 计算已存在的.mat文件数量
     existing_mat_files = os.listdir(save_dir)
-    # 计算需要处理的文件数量
     files_to_process = [f for f in mat_files if f not in existing_mat_files]
 
     print(f'We need to process {len(files_to_process)} files.')
