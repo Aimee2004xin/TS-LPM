@@ -71,7 +71,7 @@ if __name__ == '__main__':
     sample_rate = 16000    # input should be resampled to 16kHz!
     from fairseq.checkpoint_utils import load_model_ensemble_and_task
     models, cfg, task = load_model_ensemble_and_task([model_path])
-    wav2vec = models[0]  # 取出单个模型（如果是集成模型）
+    wav2vec = models[0]
     wav2vec.eval()
     #### use extract_wav2vec
     # wavfile = xxx
